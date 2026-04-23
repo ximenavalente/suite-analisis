@@ -1,0 +1,12 @@
+[build]
+  command = "echo 'Static site ready'"
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[env]
+  OPENAI_API_KEY = "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"
