@@ -655,14 +655,31 @@ Tono: profesional, sin jargon, directo, accionable.`;
         }
 
         function downloadReportPDF() {
-            const reportContent = document.querySelector('.report-visual');
-            const opt = {
-                margin: 15,
-                filename: 'informe-diagnostico.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-            };
+    const reportContent = document.querySelector('.report-visual');
+    
+    // Crear elemento temporal para el PDF
+    const pdfElement = document.createElement('div');
+    pdfElement.style.cssText = 'background: white; color: black; padding: 40px; font-family: Arial, sans-serif; line-height: 1.8; font-size: 12px;';
+    pdfElement.innerHTML = reportContent.innerHTML.replace(/<h2>/g, '<h2 style="page-break-before: avoid; margin-top: 30px; margin-bottom: 15px; color: #ff8c00; border-bottom: 2px solid #ff8c00; padding-bottom: 10px; font-size: 16px;">').replace(/<p>/g, '<p style="margin-bottom: 12px;">').replace(/<strong>/g, '<strong style="color: #ff8c00;">');
+    
+    const opt = {
+        margin: [20, 20, 20, 20],
+        filename: 'informe-diagnostico.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, allowTaint: true, useCORS: true },
+        jsPDF: { 
+            orientation: 'portrait', 
+            unit: 'mm', 
+            format: 'a4',
+            compress: true
+        },
+        pagebreak: { mode: 'avoid-all' }
+    };
+
+    html2pdf().set(opt).from(pdfElement).save().then(() => {
+        pdfElement.remove();
+    });
+}
 
             html2pdf().set(opt).from(reportContent).save();
         }
