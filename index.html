@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suite de Análisis Industrial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; width: 100%; }
@@ -147,7 +147,69 @@
         .ai-amplifier-box { background: linear-gradient(135deg, #1a3a2a 0%, #0f2818 100%); border: 2px solid #059669; border-radius: 0.5rem; padding: 1.5rem; margin-top: 2rem; }
         .ai-amplifier-box strong { color: #10b981; display: block; margin-bottom: 0.75rem; }
         .ai-amplifier-box p { font-size: 0.75rem; color: #a7f3d0; line-height: 1.6; margin-bottom: 1rem; }
-        .report-output { background: linear-gradient(135deg, #1a3a2a 0%, #0f2818 100%); border: 2px solid #059669; border-radius: 0.5rem; padding: 2rem; color: #a7f3d0; line-height: 1.8; font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto; }
+        
+        /* 3D CARDS */
+        .report-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .report-card {
+            background: linear-gradient(135deg, #1a1a1f 0%, #27272a 100%);
+            border: 2px solid #ff8c00;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transform: perspective(1000px) rotateY(0deg);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,140,0,0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        .report-card:hover::before { left: 100%; }
+        .report-card:hover {
+            transform: perspective(1000px) rotateY(-5deg) translateY(-5px);
+            box-shadow: 0 20px 40px rgba(255,140,0,0.3);
+        }
+        .report-card-title { color: #ff8c00; font-weight: bold; font-size: 0.9rem; margin-bottom: 1rem; text-transform: uppercase; }
+        .report-card-content { color: #cbd5e1; font-size: 0.75rem; line-height: 1.6; }
+        
+        /* INFORME VISUAL */
+        .report-visual {
+            background: linear-gradient(135deg, #1a1a1f 0%, #27272a 100%);
+            border: 2px solid #ff8c00;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            color: #fff;
+            line-height: 1.8;
+            font-size: 0.85rem;
+        }
+        .report-visual h2 {
+            color: #ff8c00;
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ff8c00;
+            padding-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        .report-visual h3 {
+            color: #10b981;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .report-visual p {
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+        
+        .pdf-buttons { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .pdf-buttons .btn { flex: 1; }
     </style>
 </head>
 <body>
@@ -185,7 +247,7 @@
             <div class="header-icon">⚙</div>
             <div>
                 <div class="header-title">SUITE ANÁLISIS</div>
-                <div class="header-subtitle">V3.0 SEGURO - API KEY PROTEGIDA EN BACKEND</div>
+                <div class="header-subtitle">V3.2 - INFORME VISUAL + PDF PROFESIONAL</div>
             </div>
         </div>
         <div class="main-content">
@@ -395,36 +457,38 @@
                 `;
             } else if (currentStep === 8) {
                 html = `
-                    <div class="summary-section">
-                        <div class="summary-section-title">QUÉ ESTÁ PASANDO</div>
-                        <div class="summary-content">
-                            ${data.problemEffect ? `<strong>Efecto observado:</strong> ${escapeHtml(data.problemEffect)}` : ''}
-                            ${data.environment ? `<strong>Contexto:</strong> ${escapeHtml(data.environment)}` : ''}
-                            ${data.impact ? `<strong>Impacto en el sistema:</strong> ${escapeHtml(data.impact)}` : ''}
+                    <div class="report-cards">
+                        <div class="report-card">
+                            <div class="report-card-title">📊 QUÉ ESTÁ PASANDO</div>
+                            <div class="report-card-content">
+                                <strong>Efecto:</strong> ${data.problemEffect || '—'}<br><br>
+                                <strong>Contexto:</strong> ${data.environment || '—'}<br><br>
+                                <strong>Impacto:</strong> ${data.impact || '—'}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="summary-section">
-                        <div class="summary-section-title">CÓMO SE GENERA</div>
-                        <div class="summary-content">
-                            ${data.causes ? `<strong>Condiciones estructurales:</strong> ${escapeHtml(data.causes)}` : ''}
-                            ${data.whys[0] ? `<strong>Lógica del sistema:</strong> ${escapeHtml(data.whys.filter(w => w).join(' → '))}` : ''}
+                        <div class="report-card">
+                            <div class="report-card-title">⚡ CÓMO SE GENERA</div>
+                            <div class="report-card-content">
+                                <strong>Condiciones:</strong> ${data.causes ? data.causes.substring(0, 100) + '...' : '—'}<br><br>
+                                <strong>Lógica:</strong> ${data.whys.filter(w => w).length > 0 ? data.whys.filter(w => w).join(' → ').substring(0, 100) + '...' : '—'}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="summary-section">
-                        <div class="summary-section-title">POR QUÉ SE SOSTIENE</div>
-                        <div class="summary-content">
-                            ${data.affectedActor ? `<strong>Sistema afectado:</strong> ${escapeHtml(data.affectedActor)}` : ''}
-                            ${data.stakeholders ? `<strong>Dinámicas de poder:</strong> ${escapeHtml(data.stakeholders)}` : ''}
+                        <div class="report-card">
+                            <div class="report-card-title">🔗 POR QUÉ SE SOSTIENE</div>
+                            <div class="report-card-content">
+                                <strong>Sistema:</strong> ${data.affectedActor || '—'}<br><br>
+                                <strong>Dinámicas:</strong> ${data.stakeholders ? data.stakeholders.substring(0, 100) + '...' : '—'}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="summary-section">
-                        <div class="summary-section-title">QUÉ NO ENTENDEMOS TODAVÍA</div>
-                        <div class="summary-content">
-                            ${data.technicalUncertainty ? `<strong>Técnica:</strong> ${escapeHtml(data.technicalUncertainty)}` : ''}
-                            ${data.organizationalUncertainty ? `<strong>Organizacional:</strong> ${escapeHtml(data.organizationalUncertainty)}` : ''}
+                        <div class="report-card">
+                            <div class="report-card-title">❓ INCERTIDUMBRE</div>
+                            <div class="report-card-content">
+                                <strong>Técnica:</strong> ${data.technicalUncertainty ? data.technicalUncertainty.substring(0, 100) + '...' : '—'}<br><br>
+                                <strong>Org:</strong> ${data.organizationalUncertainty ? data.organizationalUncertainty.substring(0, 100) + '...' : '—'}
+                            </div>
                         </div>
                     </div>
 
@@ -451,11 +515,13 @@
                     </div>
 
                     <div class="ai-amplifier-box">
-                        <strong>🚀 AMPLIFICAR CON IA (ChatGPT)</strong>
-                        <p>Tu síntesis está lista. Convertila en un informe ejecutivo formal con ChatGPT:</p>
-                        <button class="btn btn-primary" onclick="generateFormalReport()" style="width: 100%; padding: 1rem;">
-                            → GENERAR INFORME EJECUTIVO
-                        </button>
+                        <strong>🚀 GENERAR INFORME EJECUTIVO CON IA</strong>
+                        <p>Tu síntesis está lista. Convertila en un informe profesional con diseño visual impactante:</p>
+                        <div class="pdf-buttons">
+                            <button class="btn btn-primary" onclick="generateReport()" style="flex: 1;">
+                                → GENERAR INFORME VISUAL + PDF
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -468,7 +534,7 @@
             return text.replace(/[&<>"']/g, m => map[m]);
         }
 
-        async function generateFormalReport() {
+        async function generateReport() {
             const button = event.target;
             button.disabled = true;
             button.textContent = '⏳ Generando informe...';
@@ -532,19 +598,8 @@ Tono: profesional, sin jargon, directo, accionable.`;
                 }
 
                 const reportText = result.content;
-
-                // Mostrar el informe
-                const contentArea = document.getElementById('content');
-                contentArea.innerHTML = `
-                    <div class="report-output">
-                        ${escapeHtml(reportText)}
-                    </div>
-                    <button class="btn btn-secondary" onclick="downloadReport()" style="margin-top: 1.5rem; width: 100%; padding: 1rem;">
-                        ↓ DESCARGAR INFORME (TXT)
-                    </button>
-                `;
-                document.getElementById('btnNext').style.display = 'none';
-                document.getElementById('btnPrev').textContent = '← VOLVER A SÍNTESIS';
+                showReportVisual(reportText);
+                
             } catch (error) {
                 button.disabled = false;
                 button.textContent = '✗ Reintenta';
@@ -553,19 +608,69 @@ Tono: profesional, sin jargon, directo, accionable.`;
             }
         }
 
-        function downloadReport() {
-            const text = document.querySelector('.report-output').textContent;
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-            element.setAttribute('download', 'informe-diagnostico.txt');
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
+        function showReportVisual(reportText) {
+            const contentArea = document.querySelector('.content-wrapper');
+            
+            const formattedText = reportText.split('\n\n').map(section => {
+                let sectionHtml = section;
+                if (section.includes('SÍNTESIS EJECUTIVA')) {
+                    return `<h2>📋 SÍNTESIS EJECUTIVA</h2><p>${section.replace('SÍNTESIS EJECUTIVA', '').trim()}</p>`;
+                } else if (section.includes('ANÁLISIS ESTRUCTURAL')) {
+                    return `<h2>🔍 ANÁLISIS ESTRUCTURAL</h2><p>${section.replace('ANÁLISIS ESTRUCTURAL', '').trim()}</p>`;
+                } else if (section.includes('DINÁMICAS DE PODER')) {
+                    return `<h2>⚡ DINÁMICAS DE PODER</h2><p>${section.replace('DINÁMICAS DE PODER', '').trim()}</p>`;
+                } else if (section.includes('INCERTIDUMBRES')) {
+                    return `<h2>❓ INCERTIDUMBRES CRÍTICAS</h2><p>${section.replace(/INCERTIDUMBRES.*$/i, '').trim()}</p>`;
+                } else if (section.includes('RUTA DE APRENDIZAJE')) {
+                    return `<h2>🧠 RUTA DE APRENDIZAJE</h2><p>${section.replace('RUTA DE APRENDIZAJE', '').trim()}</p>`;
+                } else if (section.includes('RECOMENDACIONES')) {
+                    return `<h2>🎯 RECOMENDACIONES INICIALES</h2><p>${section.replace('RECOMENDACIONES INICIALES', '').trim()}</p>`;
+                }
+                return `<p>${escapeHtml(section.trim())}</p>`;
+            }).join('');
+
+            const html = `
+                <div class="report-visual">
+                    ${formattedText}
+                </div>
+                <div class="pdf-buttons">
+                    <button class="btn btn-primary" onclick="downloadReportPDF()" style="flex: 1;">
+                        ↓ DESCARGAR COMO PDF
+                    </button>
+                    <button class="btn btn-secondary" onclick="location.reload()" style="flex: 1;">
+                        ← VOLVER
+                    </button>
+                </div>
+            `;
+
+            const stepHeader = contentArea.querySelector('.step-header');
+            const formContainer = contentArea.querySelector('.form-container');
+            const buttonGroup = contentArea.querySelector('.button-group');
+
+            formContainer.innerHTML = html;
+            buttonGroup.style.display = 'none';
+
+            // Guardar el contenido para descargar
+            window.lastReportContent = document.querySelector('.report-visual').innerText;
+        }
+
+        function downloadReportPDF() {
+            const reportContent = document.querySelector('.report-visual');
+            const opt = {
+                margin: 15,
+                filename: 'informe-diagnostico.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(reportContent).save();
         }
 
         renderStep();
     </script>
 </body>
+</html>
+
 </html>
 
